@@ -2,6 +2,7 @@
 ![Bb]uild/
 ![Pp]ackages/
 ![Pp]rojectSettings/
+.idea/
 .vs/
 [Ll]ibrary/
 [Ll]ogs/
@@ -14,6 +15,7 @@
 *.csproj.user
 !.gitattributes
 !.gitignore
+.idea
 .vs
 .vsconfig
 *.csproj.Backup.tmp
