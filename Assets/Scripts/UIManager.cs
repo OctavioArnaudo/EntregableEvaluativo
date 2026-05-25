@@ -128,7 +128,6 @@ public class UIManager : MonoBehaviour
             }
             if (!exists) NetworkManager.Singleton.NetworkConfig.Prefabs.Add(new NetworkPrefab { Prefab = playerPrefab });
             NetworkManager.Singleton.NetworkConfig.PlayerPrefab = playerPrefab;
-            Debug.Log("[UIManager] Configuración de Player Prefab inyectada.");
         }
     }
 

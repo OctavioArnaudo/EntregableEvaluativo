@@ -38,7 +38,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1719170685575887882}
+  - {fileID: 7848663229403252213}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &2178341155610655817
@@ -163,8 +163,7 @@ MonoBehaviour:
   sensibilidad: 0.5
   alturaFijaCamara: 2
   distanciaTraseraCamara: -4
-  aureolaVisual: {fileID: 7317226355192568450}
-  camaraTransform: {fileID: 0}
+  aureolaVisual: {fileID: 2214565560176518013}
   puntaje:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
@@ -308,7 +307,7 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
---- !u!1001 &8973305130789047913
+--- !u!1001 &553978245857195926
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -338,15 +337,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7736108665850884707, guid: ff22c61c2aa492d418542312794e4536, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7736108665850884707, guid: ff22c61c2aa492d418542312794e4536, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7736108665850884707, guid: ff22c61c2aa492d418542312794e4536, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7736108665850884707, guid: ff22c61c2aa492d418542312794e4536, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -362,7 +361,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8549087970870280188, guid: ff22c61c2aa492d418542312794e4536, type: 3}
       propertyPath: GlobalObjectIdHash
-      value: 3609972015
+      value: 1975146241
       objectReference: {fileID: 0}
     - target: {fileID: 8549087970870280188, guid: ff22c61c2aa492d418542312794e4536, type: 3}
       propertyPath: InScenePlacedSourceGlobalObjectIdHash
@@ -373,13 +372,13 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ff22c61c2aa492d418542312794e4536, type: 3}
---- !u!4 &1719170685575887882 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 7736108665850884707, guid: ff22c61c2aa492d418542312794e4536, type: 3}
-  m_PrefabInstance: {fileID: 8973305130789047913}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &7317226355192568450 stripped
+--- !u!1 &2214565560176518013 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1804703078109025515, guid: ff22c61c2aa492d418542312794e4536, type: 3}
-  m_PrefabInstance: {fileID: 8973305130789047913}
+  m_PrefabInstance: {fileID: 553978245857195926}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &7848663229403252213 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7736108665850884707, guid: ff22c61c2aa492d418542312794e4536, type: 3}
+  m_PrefabInstance: {fileID: 553978245857195926}
   m_PrefabAsset: {fileID: 0}

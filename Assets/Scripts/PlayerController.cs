@@ -16,8 +16,8 @@ public class PlayerController : NetworkBehaviour
 
     [Header("Referencias")]
     [SerializeField] private GameObject aureolaVisual;
-    [SerializeField] private Transform camaraTransform;
 
+    private Transform camaraTransform;
     private Rigidbody rb;
     private Vector2 moveInput;
     private float rotY, rotX;
@@ -31,12 +31,14 @@ public class PlayerController : NetworkBehaviour
     {
         rb = GetComponent<Rigidbody>();
 
-        // 1. BLOQUEO FÍSICO ABSOLUTO: El Rigidbody no puede rotar en X ni Z (no se inclina)
+        // Bloqueo físico absoluto: no rota en X ni Z
         rb.freezeRotation = true;
         rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
 
         rb.isKinematic = true;
-        if (TryGetComponent<PlayerInput>(out var input)) input.enabled = false;
+
+        if (TryGetComponent<PlayerInput>(out var input))
+            input.enabled = false;
     }
 
     private void Start()
@@ -60,10 +62,12 @@ public class PlayerController : NetworkBehaviour
         else
         {
             rb.isKinematic = true;
-            if (camaraTransform != null) camaraTransform.gameObject.SetActive(false);
         }
 
-        if (IsServer) idEquipo.Value = (int)(OwnerClientId % 2);
+        if (IsServer)
+        {
+            idEquipo.Value = (int)(OwnerClientId % 2);
+        }
 
         tieneEstrella.OnValueChanged += (oldVal, newVal) => { if (aureolaVisual != null) aureolaVisual.SetActive(newVal); };
         idEquipo.OnValueChanged += (oldVal, newVal) => ActualizarVisuales();
