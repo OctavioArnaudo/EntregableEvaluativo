@@ -3,6 +3,7 @@ using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
 using System.Net;
 using System.Net.Sockets;
 
@@ -35,6 +36,47 @@ public class UIManager : MonoBehaviour
 
     private void Update()
     {
+        // Usar el New Input System para detectar la tecla Escape
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            // Caso 1: Estamos jugando (ningún panel principal/fin activo) -> Mostrar Scoreboard (panelFinPartida)
+            if (!panelFinPartida.activeSelf && !panelMenuPrincipal.activeSelf && !panelMenuSecundario.activeSelf)
+            {
+                if (panelFinPartida != null)
+                {
+                    panelFinPartida.SetActive(true);
+                    ActualizarTextoScoreboard();
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                }
+            }
+            // Caso 2: El Scoreboard está abierto
+            else if (panelFinPartida.activeSelf)
+            {
+                // Si la partida terminó de verdad, el Esc no hace nada (obligamos a elegir opción)
+                if (GameManager.Instance != null && GameManager.Instance.juegoTerminado.Value) return;
+
+                // Si no ha terminado, pasamos al Menú Principal
+                panelFinPartida.SetActive(false);
+                if (panelMenuPrincipal != null) panelMenuPrincipal.SetActive(true);
+            }
+            // Caso 3: El Menú Principal está abierto -> Volver al juego
+            else if (panelMenuPrincipal.activeSelf)
+            {
+                OcultarTodosLosMenus();
+                if (NetworkManager.Singleton != null && (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsServer))
+                {
+                    Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.visible = false;
+                }
+            }
+            // Caso 4: Menú secundario (IP) -> Volver al Principal
+            else if (panelMenuSecundario.activeSelf)
+            {
+                RegresarAlMenuPrincipal();
+            }
+        }
+
         if (NetworkManager.Singleton == null || (!NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsServer))
             return;
 
@@ -42,11 +84,29 @@ public class UIManager : MonoBehaviour
         ActualizarHUD();
     }
 
+    private void ActualizarTextoScoreboard()
+    {
+        if (GameManager.Instance == null || textoGanador == null) return;
+
+        if (GameManager.Instance.juegoTerminado.Value)
+        {
+            TeamId ganador = GameManager.Instance.ganadorSincronizado.Value;
+            textoGanador.text = (ganador == TeamId.Blue) ? "¡EQUIPO AZUL!" : (ganador == TeamId.Red) ? "¡EQUIPO ROJO!" : "¡EMPATE!";
+        }
+        else
+        {
+            var p = GameManager.Instance.CalcularPuntajes();
+            if (p.azul > p.rojo) textoGanador.text = "¡EQUIPO AZUL!";
+            else if (p.rojo > p.azul) textoGanador.text = "¡EQUIPO ROJO!";
+            else textoGanador.text = "¡EMPATE!";
+        }
+    }
+
     public void IrAlMenuSecundario()
     {
         panelMenuPrincipal?.SetActive(false);
         panelMenuSecundario?.SetActive(true);
-        if (ipInputField != null && string.IsNullOrEmpty(ipInputField.text)) ipInputField.text = "192.168.0.197";
+        if (ipInputField != null && string.IsNullOrEmpty(ipInputField.text)) ipInputField.text = GetLocalIPAddress();
     }
 
     public void RegresarAlMenuPrincipal()
@@ -58,11 +118,24 @@ public class UIManager : MonoBehaviour
     public void IniciarHost()
     {
         if (NetworkManager.Singleton == null) return;
-        NetworkManager.Singleton.Shutdown();
+
+        // Si ya estamos en una sesión (Host o Cliente), no intentamos iniciar de nuevo.
+        // Esto evita el error de "Socket already in use" al pulsar el botón repetidamente.
+        if (NetworkManager.Singleton.IsListening)
+        {
+            Debug.LogWarning("[RED] Ya hay una sesión activa. Ocultando menús...");
+            OcultarTodosLosMenus();
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            return;
+        }
+
+        ConfigurarPrefab();
 
         var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
         if (transport != null)
         {
+            // El Host escucha en 127.0.0.1 para sí mismo y 0.0.0.0 para aceptar conexiones externas
             transport.SetConnectionData("127.0.0.1", 7777, "0.0.0.0");
         }
 
@@ -70,18 +143,25 @@ public class UIManager : MonoBehaviour
         {
             if (ipInputField != null) ipInputField.text = GetLocalIPAddress();
             OcultarTodosLosMenus();
-            Debug.Log("[RED] Host iniciado con éxito en IP: " + GetLocalIPAddress());
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            Debug.Log("[RED] Host iniciado con éxito.");
+        }
+        else
+        {
+            Debug.LogError("[RED] No se pudo iniciar el Host. Asegúrate de que no haya otro juego abierto usando el puerto 7777.");
         }
     }
 
     public void IniciarCliente()
     {
         if (NetworkManager.Singleton == null) return;
-        NetworkManager.Singleton.Shutdown();
+
+        if (NetworkManager.Singleton.IsListening) NetworkManager.Singleton.Shutdown();
 
         ConfigurarPrefab();
 
-        string rawInput = (ipInputField != null && !string.IsNullOrEmpty(ipInputField.text)) ? ipInputField.text.Trim() : "127.0.0.1";
+        string rawInput = (ipInputField != null && !string.IsNullOrEmpty(ipInputField.text)) ? ipInputField.text.Trim() : GetLocalIPAddress();
         string ip = rawInput;
 
         var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
@@ -102,16 +182,16 @@ public class UIManager : MonoBehaviour
             transport.SetConnectionData(ip, port);
         }
 
-        // Suscribirse a eventos de conexión
-        NetworkManager.Singleton.OnClientConnectedCallback += (id) => {
-            Debug.Log($"[RED] ¡CONECTADO! ID: {id}");
-            Instantiate(playerPrefab, playerPrefab.transform.position, playerPrefab.transform.rotation);
-        };
-
         if (NetworkManager.Singleton.StartClient())
         {
             OcultarTodosLosMenus();
-            Debug.Log($"[RED] Intentando conectar al Host en: {ip}:{port}");
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            Debug.Log($"[RED] Intentando conectar a: {ip}:{port}");
+        }
+        else
+        {
+            Debug.LogError("[RED] No se pudo iniciar el Cliente.");
         }
     }
 
@@ -146,18 +226,23 @@ public class UIManager : MonoBehaviour
         if (textoAzul != null) textoAzul.text = $"EQUIPO AZUL: {puntajes.azul}";
         if (textoRojo != null) textoRojo.text = $"EQUIPO ROJO: {puntajes.rojo}";
 
-        if (GameManager.Instance.juegoTerminado.Value) MostrarFinPartida(GameManager.Instance.ganadorSincronizado.Value);
+        // Si el panel de fin/score está activo, mantenemos el texto actualizado
+        if (panelFinPartida != null && panelFinPartida.activeSelf) ActualizarTextoScoreboard();
+
+        if (GameManager.Instance.juegoTerminado.Value) MostrarFinPartida();
     }
 
-    private void MostrarFinPartida(TeamId ganador)
+    private void MostrarFinPartida()
     {
-        if (panelFinPartida != null && !panelFinPartida.activeSelf)
+        if (panelFinPartida != null)
         {
-            panelFinPartida.SetActive(true);
-            string m = (ganador == TeamId.Blue) ? "¡EQUIPO AZUL!" : (ganador == TeamId.Red) ? "¡EQUIPO ROJO!" : "¡EMPATE!";
-            if (textoGanador != null) textoGanador.text = m;
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            if (!panelFinPartida.activeSelf)
+            {
+                panelFinPartida.SetActive(true);
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+            ActualizarTextoScoreboard();
         }
     }
 
