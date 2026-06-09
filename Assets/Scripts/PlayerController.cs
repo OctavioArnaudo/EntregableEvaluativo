@@ -91,7 +91,7 @@ public class PlayerController : NetworkBehaviour
 
     public void OnLook(InputValue v)
     {
-        if (!IsOwner) return;
+        if (!IsOwner || Cursor.lockState != CursorLockMode.Locked) return;
         Vector2 look = v.Get<Vector2>() * sensibilidad;
 
         // Acumulamos rotación
@@ -101,7 +101,7 @@ public class PlayerController : NetworkBehaviour
 
     private void FixedUpdate()
     {
-        if (!IsOwner) return;
+        if (!IsOwner || Cursor.lockState != CursorLockMode.Locked) return;
 
         // 2. ROTACIÓN DEL CUERPO: Solo sobre el eje Y (Giro horizontal)
         // Se establece explícitamente (0, rotY, 0). Jamás habrá inclinación.
@@ -160,7 +160,21 @@ public class PlayerController : NetworkBehaviour
         if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(starId, out var star))
         {
             tieneEstrella.Value = true;
-            star.Despawn();
+            // Avisar a todos los clientes que oculten la estrella antes de despawnear
+            OcultarEstrellaClientRpc(starId);
+
+            // Despawn(false) para objetos de escena evita la advertencia y errores de jerarquía
+            star.Despawn(false);
+            star.gameObject.SetActive(false);
+        }
+    }
+
+    [ClientRpc]
+    private void OcultarEstrellaClientRpc(ulong starId)
+    {
+        if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(starId, out var star))
+        {
+            star.gameObject.SetActive(false);
         }
     }
 
