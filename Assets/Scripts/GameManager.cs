@@ -14,11 +14,11 @@ public class GameManager : NetworkBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("Configuración de Partida")]
-    [SerializeField] private float tiempoRestante = 180f;
+    [SerializeField] private float tiempoRestante = 60f;
     [SerializeField] private int puntosParaVictoriaInmediata = 26;
 
     // Variables sincronizadas para que todos los clientes vean lo mismo
-    public NetworkVariable<float> tiempoSincronizado = new NetworkVariable<float>(180f);
+    public NetworkVariable<float> tiempoSincronizado = new NetworkVariable<float>(60f);
     public NetworkVariable<bool> juegoTerminado = new NetworkVariable<bool>(false);
     public NetworkVariable<TeamId> ganadorSincronizado = new NetworkVariable<TeamId>(TeamId.None);
 
